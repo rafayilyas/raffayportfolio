@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abdul Raffay Bin Ilyas — AI / Computer Vision</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080B12;
+    --surface:#0F1420;
+    --surface-2:#161C2C;
+    --text:#F2F1EA;
+    --muted:#8891A6;
+    --violet:#9C8CFF;
+    --violet-dim:#6C5CE0;
+    --mint:#5EEAD4;
+    --coral:#FF8A65;
+    --line:rgba(242,241,234,0.08);
+    --line-strong:rgba(242,241,234,0.16);
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    position:relative;
+  }
+  a{color:inherit;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 32px;position:relative;z-index:2;}
+  section{padding:120px 0;position:relative;}
+
+  /* ---------- network canvas backdrop ---------- */
+  #net{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.55;pointer-events:none;}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background-image:radial-gradient(rgba(242,241,234,0.035) 1px, transparent 1px);
+    background-size:26px 26px;}
+
+  /* ---------- scroll progress ---------- */
+  #progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--violet),var(--mint));z-index:100;width:0%;transition:width .1s;}
+
+  /* ---------- nav ---------- */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    background:rgba(8,11,18,0.75);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{display:flex;justify-content:space-between;align-items:center;height:64px;padding-top:0;padding-bottom:0;}
+  .nav-mark{font-family:var(--font-mono);font-size:13px;color:var(--mint);letter-spacing:0.5px;}
+  .nav-links{display:flex;gap:28px;list-style:none;}
+  .nav-links a{font-family:var(--font-mono);font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s;position:relative;}
+  .nav-links a:hover{color:var(--text);}
+  @media(max-width:640px){.nav-links{gap:14px;} .nav-links a{font-size:10px;}}
+
+  /* ---------- hero ---------- */
+  .hero{padding:210px 0 130px;}
+  .eyebrow{
+    font-family:var(--font-mono);font-size:13px;color:var(--mint);
+    letter-spacing:1px;margin-bottom:28px;display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:'';width:8px;height:8px;background:var(--mint);border-radius:50%;display:inline-block;
+    box-shadow:0 0 12px 2px var(--mint); animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+  h1{
+    font-family:var(--font-display);font-weight:700;
+    font-size:clamp(34px,7vw,72px);line-height:1.06;letter-spacing:-1.5px;
+    margin-bottom:30px;min-height:1.2em;
+    background:linear-gradient(120deg,var(--text) 40%,var(--violet) 75%,var(--mint) 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .hero-sub{
+    font-size:19px;color:var(--muted);max-width:600px;margin-bottom:44px;
+    font-weight:400;
+  }
+  .hero-tags{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:52px;}
+  .tag{
+    font-family:var(--font-mono);font-size:12px;color:var(--text);
+    border:1px solid var(--line-strong);padding:7px 14px;border-radius:20px;
+    background:var(--surface);transition:border-color .2s, transform .2s;
+  }
+  .tag:hover{border-color:var(--violet);transform:translateY(-2px);}
+  .hero-cta{display:flex;gap:16px;flex-wrap:wrap;}
+  .btn{
+    font-family:var(--font-mono);font-size:13px;padding:14px 26px;
+    border-radius:8px;text-decoration:none;display:inline-block;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .btn-primary{background:linear-gradient(120deg,var(--violet),var(--violet-dim));color:#080B12;font-weight:500;}
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 10px 30px -8px rgba(156,140,255,0.5);}
+  .btn-ghost{border:1px solid var(--line-strong);color:var(--text);}
+  .btn-ghost:hover{border-color:var(--mint);color:var(--mint);transform:translateY(-3px);}
+
+  /* ---------- section headers ---------- */
+  .sec-head{margin-bottom:60px;display:flex;align-items:baseline;gap:16px;}
+  .sec-num{font-family:var(--font-mono);font-size:12px;color:var(--coral);letter-spacing:1px;white-space:nowrap;}
+  .sec-title{font-family:var(--font-display);font-size:clamp(28px,4vw,40px);font-weight:600;letter-spacing:-0.5px;}
+  .sec-rule{flex:1;height:1px;background:var(--line);}
+
+  /* ---------- projects ---------- */
+  .project{
+    border:1px solid var(--line);border-radius:16px;
+    padding:36px;margin-bottom:20px;
+    background:var(--surface);
+    display:grid;grid-template-columns:180px 1fr;gap:32px;
+    transition:border-color .25s, transform .25s, background .25s;
+    position:relative;overflow:hidden;
+  }
+  .project::before{
+    content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+    background:linear-gradient(180deg,var(--violet),var(--mint));opacity:0;transition:opacity .25s;
+  }
+  .project:hover{border-color:var(--line-strong);transform:translateY(-4px);background:var(--surface-2);}
+  .project:hover::before{opacity:1;}
+  .project-meta{font-family:var(--font-mono);font-size:12px;color:var(--mint);}
+  .project-meta .metric{display:block;color:var(--coral);margin-top:10px;font-size:12px;font-weight:500;}
+  .project-title{font-family:var(--font-display);font-size:23px;font-weight:600;margin-bottom:14px;letter-spacing:-0.3px;}
+  .project-desc{color:var(--muted);font-size:15px;max-width:600px;margin-bottom:18px;}
+  .stack{display:flex;flex-wrap:wrap;gap:8px;}
+  .stack span{
+    font-family:var(--font-mono);font-size:11px;color:var(--text);
+    background:var(--bg);border:1px solid var(--line);padding:5px 11px;border-radius:5px;
+  }
+  @media(max-width:640px){.project{grid-template-columns:1fr;gap:14px;padding:26px;}}
+
+  /* ---------- skills bento ---------- */
+  .skills-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;}
+  .skill-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px;
+    transition:border-color .25s, transform .25s;
+  }
+  .skill-card:hover{border-color:var(--violet);transform:translateY(-3px);}
+  .skill-cat{font-family:var(--font-mono);font-size:11px;color:var(--violet);letter-spacing:0.5px;margin-bottom:14px;}
+  .skill-list{color:var(--muted);font-size:14px;line-height:1.85;}
+  @media(max-width:520px){.skills-grid{grid-template-columns:1fr;}}
+
+  /* ---------- experience ---------- */
+  .exp-row{
+    display:grid;grid-template-columns:140px 1fr;gap:24px;
+    padding:28px 0;border-bottom:1px solid var(--line);
+    transition:padding-left .25s;
+  }
+  .exp-row:hover{padding-left:10px;}
+  .exp-row:first-child{border-top:1px solid var(--line);}
+  .exp-date{font-family:var(--font-mono);font-size:12px;color:var(--muted);}
+  .exp-role{font-weight:600;font-size:17px;margin-bottom:4px;font-family:var(--font-display);}
+  .exp-org{color:var(--coral);font-size:14px;margin-bottom:10px;font-family:var(--font-mono);}
+  .exp-desc{color:var(--muted);font-size:14px;}
+
+  /* ---------- contact ---------- */
+  .contact-card{
+    position:relative;
+    background:var(--surface);border:1px solid var(--line-strong);border-radius:20px;
+    padding:64px;text-align:center;overflow:hidden;
+  }
+  .contact-card::before{
+    content:'';position:absolute;top:-60%;left:50%;transform:translateX(-50%);
+    width:600px;height:300px;
+    background:radial-gradient(ellipse at center, rgba(156,140,255,0.25), transparent 70%);
+    pointer-events:none;
+  }
+  .contact-card p{color:var(--muted);max-width:460px;margin:0 auto 34px;font-size:16px;position:relative;}
+  .contact-links{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;position:relative;}
+
+  footer{padding:44px 0;border-top:1px solid var(--line);}
+  footer .wrap{display:flex;justify-content:space-between;color:var(--muted);font-family:var(--font-mono);font-size:12px;}
+  @media(max-width:640px){footer .wrap{flex-direction:column;gap:8px;text-align:center;}}
+
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.8,.2,1), transform .7s cubic-bezier(.2,.8,.2,1);}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  /* ---------- marquee ---------- */
+  .marquee-wrap{
+    border-bottom:1px solid var(--line);background:var(--surface);
+    overflow:hidden;white-space:nowrap;padding:12px 0;position:relative;z-index:2;
+  }
+  .marquee{display:inline-block;animation:scroll-left 26s linear infinite;}
+  .marquee span{
+    font-family:var(--font-mono);font-size:13px;color:var(--muted);
+    padding:0 24px;letter-spacing:0.5px;
+  }
+  .marquee span.hl{color:var(--mint);}
+  @keyframes scroll-left{
+    0%{transform:translateX(0);}
+    100%{transform:translateX(-50%);}
+  }
+
+  /* ---------- floating blobs ---------- */
+  .blob{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none;z-index:0;opacity:0.35;}
+  .blob1{width:340px;height:340px;background:var(--violet);top:-80px;right:-60px;animation:float1 14s ease-in-out infinite;}
+  .blob2{width:260px;height:260px;background:var(--mint);top:220px;left:-100px;animation:float2 18s ease-in-out infinite;}
+  @keyframes float1{0%,100%{transform:translate(0,0);}50%{transform:translate(-30px,40px);}}
+  @keyframes float2{0%,100%{transform:translate(0,0);}50%{transform:translate(40px,-30px);}}
+
+  /* ---------- custom cursor glow (non-touch only) ---------- */
+  #cursor-glow{
+    position:fixed;width:280px;height:280px;border-radius:50%;
+    background:radial-gradient(circle, rgba(156,140,255,0.14), transparent 70%);
+    pointer-events:none;z-index:40;transform:translate(-50%,-50%);
+    left:-300px;top:-300px;transition:opacity .3s;
+  }
+
+  /* ---------- tilt project cards ---------- */
+  .project{transform-style:preserve-3d;will-change:transform;}
+
+  /* ---------- more projects (github grid) ---------- */
+  .more-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:8px;}
+  .mini-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:24px;text-decoration:none;color:var(--text);display:block;
+    transition:border-color .25s, transform .25s, background .25s;
+    position:relative;
+  }
+  .mini-card:hover{border-color:var(--mint);transform:translateY(-4px);background:var(--surface-2);}
+  .mini-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+  .mini-card-title{font-family:var(--font-display);font-size:17px;font-weight:600;letter-spacing:-0.2px;}
+  .mini-card svg.gh{width:16px;height:16px;color:var(--muted);flex-shrink:0;transition:color .25s;}
+  .mini-card:hover svg.gh{color:var(--mint);}
+  .mini-card-desc{color:var(--muted);font-size:13.5px;margin-bottom:14px;line-height:1.6;}
+  .mini-stack{display:flex;flex-wrap:wrap;gap:6px;}
+  .mini-stack span{
+    font-family:var(--font-mono);font-size:10.5px;color:var(--muted);
+    background:var(--bg);border:1px solid var(--line);padding:3px 9px;border-radius:4px;
+  }
+
+
+  .btn-icon{display:inline-flex;align-items:center;gap:8px;}
+  .btn-icon svg{width:16px;height:16px;flex-shrink:0;}
+  .btn-copy{position:relative;}
+
+  /* ---------- magnetic ---------- */
+  .magnetic{transition:transform .15s ease-out;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="net"></canvas>
+<div class="grain"></div>
+<div id="progress"></div>
+
+<nav>
+  <div class="wrap">
+    <div class="nav-mark">A.R. ILYAS / AI</div>
+    <ul class="nav-links">
+      <li><a href="#work">Work</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="Abdul_Raffay_Bin_Ilyas_CV.pdf" target="_blank" rel="noopener">Resume</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li><a href="https://github.com/rafayilyas" target="_blank" rel="noopener" aria-label="GitHub" style="display:flex;align-items:center;">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.93.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.77.12 3.06.74.8 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .3.2.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+      </a></li>
+      <li><a href="https://www.linkedin.com/in/abdul-raffay-bin-ilyas2005/" target="_blank" rel="noopener" aria-label="LinkedIn" style="display:flex;align-items:center;">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.15 1.45-2.15 2.94v5.67H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45z"/></svg>
+      </a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="marquee-wrap">
+  <div class="marquee">
+    <span class="hl">OPEN TO INTERNSHIPS</span><span>·</span>
+    <span>COMPUTER VISION</span><span>·</span>
+    <span class="hl">ADVERSARIAL ML</span><span>·</span>
+    <span>DEEPFAKE DEFENSE</span><span>·</span>
+    <span class="hl">FYP READY</span><span>·</span>
+    <span>ISLAMABAD, PK</span><span>·</span>
+    <span class="hl">OPEN TO INTERNSHIPS</span><span>·</span>
+    <span>COMPUTER VISION</span><span>·</span>
+    <span class="hl">ADVERSARIAL ML</span><span>·</span>
+    <span>DEEPFAKE DEFENSE</span><span>·</span>
+    <span class="hl">FYP READY</span><span>·</span>
+    <span>ISLAMABAD, PK</span><span>·</span>
+  </div>
+</div>
+
+<div id="cursor-glow"></div>
+
+<section class="hero">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="wrap">
+    <div class="eyebrow">4TH YEAR AI UNDERGRAD · GIKI</div>
+    <h1 id="glitch-title">Abdul Raffay Bin Ilyas</h1>
+    <p class="hero-sub">I build systems that see — and systems that stop other systems from seeing what isn't there. Focused on computer vision, adversarial machine learning, and applied AI for real-world security problems.</p>
+    <div class="hero-tags">
+      <span class="tag">Adversarial ML</span>
+      <span class="tag">Computer Vision</span>
+      <span class="tag">Deepfake Defense</span>
+      <span class="tag">PyTorch</span>
+    </div>
+    <div class="hero-cta">
+      <a href="#work" class="btn btn-primary">View projects</a>
+      <a href="Abdul_Raffay_Bin_Ilyas_CV.pdf" target="_blank" rel="noopener" class="btn btn-ghost">View resume</a>
+      <a href="#contact" class="btn btn-ghost">Get in touch</a>
+    </div>
+  </div>
+</section>
+
+<section id="work">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-num">01 · SELECTED WORK</div>
+      <div class="sec-title">Projects</div>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="project reveal">
+      <div class="project-meta">DEEPFAKE DEFENSE
+        <span class="metric">PGD ATTACK</span>
+      </div>
+      <div>
+        <div class="project-title">Adversarial perturbation for deepfake prevention</div>
+        <p class="project-desc">Built for a counter-terrorism / security-technology use case: embeds imperceptible pixel-level perturbations into source photos so that face-swap and deepfake pipelines produce visibly distorted output when the protected image is used. Covers encoder loading, a PGD-based attack loop, robustness evaluation against multiple face-swap models, and a Streamlit demo for non-technical stakeholders.</p>
+        <div class="stack"><span>PyTorch</span><span>PGD</span><span>Face embeddings</span><span>Streamlit</span></div>
+      </div>
+    </div>
+
+    <div class="project reveal">
+      <div class="project-meta">MEDICAL IMAGING
+        <span class="metric">89%+ ACCURACY</span>
+      </div>
+      <div>
+        <div class="project-title">Alzheimer's disease detection from MRI</div>
+        <p class="project-desc">CNN-based classifier using transfer learning to detect and stage Alzheimer's disease from brain MRI scans, reaching 89%+ accuracy. Explored multiple pretrained backbones and fine-tuning strategies to handle a small, imbalanced medical imaging dataset.</p>
+        <div class="stack"><span>CNNs</span><span>Transfer learning</span><span>Medical imaging</span></div>
+      </div>
+    </div>
+
+    <div class="project reveal">
+      <div class="project-meta">APPLIED ML
+        <span class="metric">GRID FORECASTING</span>
+      </div>
+      <div>
+        <div class="project-title">PowerGridAI</div>
+        <p class="project-desc">An applied ML system spanning three problem types on power grid data: regression for load prediction, classification for fault detection, and time-series forecasting for demand planning — built to compare model families across a single real-world dataset.</p>
+        <div class="stack"><span>Regression</span><span>Classification</span><span>Time-series</span></div>
+      </div>
+    </div>
+
+    <div class="more-grid">
+      <a href="https://github.com/rafayilyas/Transport-Management-System" target="_blank" rel="noopener" class="mini-card reveal">
+        <div class="mini-card-top">
+          <div class="mini-card-title">Transport Management System</div>
+          <svg class="gh" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.93.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.77.12 3.06.74.8 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .3.2.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        </div>
+        <p class="mini-card-desc">An online seat-booking platform letting users reserve bus and plane seats at fair prices.</p>
+        <div class="mini-stack"><span>C++</span></div>
+      </a>
+
+      <a href="https://github.com/rafayilyas/Food-Delivery-DSA" target="_blank" rel="noopener" class="mini-card reveal">
+        <div class="mini-card-top">
+          <div class="mini-card-title">Food Delivery Management System</div>
+          <svg class="gh" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.93.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.77.12 3.06.74.8 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .3.2.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        </div>
+        <p class="mini-card-desc">Applies queues for order processing, stacks for order history, and linked lists for menu and customer records, with file handling for persistent storage.</p>
+        <div class="mini-stack"><span>C++</span><span>Data structures</span></div>
+      </a>
+
+      <a href="https://github.com/rafayilyas/SImple-Language-Translator-using-Python" target="_blank" rel="noopener" class="mini-card reveal">
+        <div class="mini-card-top">
+          <div class="mini-card-title">Language Translator App</div>
+          <svg class="gh" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.93.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.77.12 3.06.74.8 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .3.2.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        </div>
+        <p class="mini-card-desc">A Python desktop app built with Tkinter and the Googletrans API, supporting 100+ languages with a clean, error-handled UI.</p>
+        <div class="mini-stack"><span>Python</span><span>Tkinter</span></div>
+      </a>
+
+      <a href="https://github.com/rafayilyas/China-Population-Analysis-" target="_blank" rel="noopener" class="mini-card reveal">
+        <div class="mini-card-top">
+          <div class="mini-card-title">Population Prediction Model</div>
+          <svg class="gh" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.93.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.77.12 3.06.74.8 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .3.2.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        </div>
+        <p class="mini-card-desc">A regression model predicting population trends from historical demographic data, hitting 90%+ prediction accuracy.</p>
+        <div class="mini-stack"><span>Regression</span><span>Python</span></div>
+      </a>
+
+      <a href="https://github.com/rafayilyas/Maze-Solver" target="_blank" rel="noopener" class="mini-card reveal">
+        <div class="mini-card-top">
+          <div class="mini-card-title">Maze Solver</div>
+          <svg class="gh" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.93.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.77.12 3.06.74.8 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .3.2.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        </div>
+        <p class="mini-card-desc">A pathfinding maze solver built with Python's turtle library, visualizing the search as it explores.</p>
+        <div class="mini-stack"><span>Python</span><span>Algorithms</span></div>
+      </a>
+
+      <a href="https://github.com/rafayilyas/Data-Structures-and-Algos-Codes" target="_blank" rel="noopener" class="mini-card reveal">
+        <div class="mini-card-top">
+          <div class="mini-card-title">Data Structures & Algorithms</div>
+          <svg class="gh" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.93.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.77.12 3.06.74.8 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .3.2.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        </div>
+        <p class="mini-card-desc">A running collection of core data structure and algorithm implementations from coursework and practice.</p>
+        <div class="mini-stack"><span>C++</span></div>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<section id="skills">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-num">02 · TOOLBOX</div>
+      <div class="sec-title">Skills</div>
+      <div class="sec-rule"></div>
+    </div>
+    <div class="skills-grid reveal">
+      <div class="skill-card">
+        <div class="skill-cat">LANGUAGES</div>
+        <div class="skill-list">Python · C · C++<br>C# · JavaScript · SQL</div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-cat">ML / DEEP LEARNING</div>
+        <div class="skill-list">TensorFlow · Keras<br>Scikit-learn · Adversarial ML (PGD)<br>NumPy · Pandas · Matplotlib</div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-cat">COMPUTER VISION</div>
+        <div class="skill-list">OpenCV · Face detection<br>Face-swap / deepfake detection<br>Image preprocessing</div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-cat">BACKEND & APIs</div>
+        <div class="skill-list">.NET · FastAPI · Swagger<br>REST API design · GraphDB<br>MongoDB · PostgreSQL · Firebase</div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-cat">TOOLS & DEVOPS</div>
+        <div class="skill-list">Git/GitHub · Docker · CI/CD<br>Linux · VS Code · Visual Studio<br>Streamlit · Figma · MLOps</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="experience">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-num">03 · BACKGROUND</div>
+      <div class="sec-title">Experience</div>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="exp-row reveal">
+      <div class="exp-date">Internship</div>
+      <div>
+        <div class="exp-role">AI/ML Intern</div>
+        <div class="exp-org">NACTA</div>
+        <div class="exp-desc">Worked on AI/ML applications for counter-terrorism and security use cases, including work related to deepfake detection and prevention.</div>
+      </div>
+    </div>
+
+    <div class="exp-row reveal">
+      <div class="exp-date">Internship</div>
+      <div>
+        <div class="exp-role">Software Development Intern</div>
+        <div class="exp-org">AWT (MIS)</div>
+        <div class="exp-desc">Built REST API endpoints in .NET and designed interface flows in Figma for internal management information systems.</div>
+      </div>
+    </div>
+
+    <div class="exp-row reveal">
+      <div class="exp-date">Society</div>
+      <div>
+        <div class="exp-role">Member</div>
+        <div class="exp-org">AI Frontier Society, GIKI</div>
+        <div class="exp-desc">Involved in the university's student AI community — talks, projects, and peer learning.</div>
+      </div>
+    </div>
+
+    <div class="exp-row reveal">
+      <div class="exp-date">GIKI</div>
+      <div>
+        <div class="exp-role">BS Artificial Intelligence</div>
+        <div class="exp-org">Ghulam Ishaq Khan Institute of Engineering Sciences and Technology</div>
+        <div class="exp-desc">Final year — coursework and independent projects across computer vision, deep learning, and applied ML.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div class="contact-card reveal">
+      <div class="sec-num" style="text-align:center;">04 · GET IN TOUCH</div>
+      <h2 style="font-family:var(--font-display);font-size:34px;font-weight:600;margin:14px 0 20px;letter-spacing:-0.5px;">Open to remote work</h2>
+      <p>Looking for remote roles and projects in machine learning, computer vision, and applied AI security. Reach out below.</p>
+      <div class="contact-links">
+        <a href="mailto:rafayilyas65@gmail.com" class="btn btn-primary btn-icon" id="email-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6"/><path d="M2 6h20v12H2z"/></svg>
+          <span id="email-label">Email me</span>
+        </a>
+        <a href="https://github.com/rafayilyas" target="_blank" rel="noopener" class="btn btn-ghost btn-icon magnetic">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.93.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.77.12 3.06.74.8 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .3.2.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <a href="https://www.linkedin.com/in/abdul-raffay-bin-ilyas2005/" target="_blank" rel="noopener" class="btn btn-ghost btn-icon magnetic">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.15 1.45-2.15 2.94v5.67H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45z"/></svg>
+          <span>LinkedIn</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Abdul Raffay Bin Ilyas</span>
+    <span>Islamabad, Pakistan</span>
+  </div>
+</footer>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- name de-noise effect ----
+  const target = "Abdul Raffay Bin Ilyas";
+  const chars = "01#$%&*+=<>▚▞▓░";
+  const el = document.getElementById('glitch-title');
+  let frame = 0;
+  const totalFrames = 24;
+
+  function render(f){
+    let out = "";
+    for(let i=0;i<target.length;i++){
+      if(target[i] === " "){ out += " "; continue; }
+      const settleAt = Math.floor((i/target.length)*totalFrames*0.6)+4;
+      out += (f >= settleAt) ? target[i] : chars[Math.floor(Math.random()*chars.length)];
+    }
+    el.textContent = out;
+  }
+  function tick(){
+    render(frame);
+    frame++;
+    if(frame <= totalFrames){ requestAnimationFrame(()=> setTimeout(tick, 42)); }
+    else{ el.textContent = target; }
+  }
+  tick();
+
+  // ---- cursor glow (skip on touch devices) ----
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
+  const glow = document.getElementById('cursor-glow');
+  if(!isTouch && !reduceMotion){
+    window.addEventListener('mousemove', (e)=>{
+      glow.style.left = e.clientX + 'px';
+      glow.style.top = e.clientY + 'px';
+    });
+  } else {
+    glow.style.display = 'none';
+  }
+
+  // ---- magnetic buttons ----
+  if(!isTouch){
+    document.querySelectorAll('.magnetic, .btn').forEach(btn=>{
+      btn.addEventListener('mousemove', (e)=>{
+        const r = btn.getBoundingClientRect();
+        const x = e.clientX - r.left - r.width/2;
+        const y = e.clientY - r.top - r.height/2;
+        btn.style.transform = `translate(${x*0.15}px, ${y*0.25}px)`;
+      });
+      btn.addEventListener('mouseleave', ()=>{ btn.style.transform = ''; });
+    });
+  }
+
+  // ---- tilt on project cards ----
+  if(!isTouch){
+    document.querySelectorAll('.project').forEach(card=>{
+      card.addEventListener('mousemove', (e)=>{
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `perspective(800px) rotateY(${px*4}deg) rotateX(${-py*4}deg) translateY(-4px)`;
+      });
+      card.addEventListener('mouseleave', ()=>{ card.style.transform = ''; });
+    });
+  }
+
+  // ---- copy email on click ----
+  const emailBtn = document.getElementById('email-btn');
+  const emailLabel = document.getElementById('email-label');
+  emailBtn.addEventListener('click', (e)=>{
+    navigator.clipboard?.writeText('rafayilyas65@gmail.com');
+    emailLabel.textContent = 'Copied!';
+    setTimeout(()=>{ emailLabel.textContent = 'Email me'; }, 1800);
+  });
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+  }, {threshold:0.12});
+  document.querySelectorAll('.reveal').forEach(elm=> io.observe(elm));
+
+  // ---- scroll progress bar ----
+  const bar = document.getElementById('progress');
+  window.addEventListener('scroll', ()=>{
+    const h = document.documentElement;
+    const pct = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    bar.style.width = pct + '%';
+  });
+
+  // ---- neural network canvas background ----
+  const canvas = document.getElementById('net');
+  const ctx = canvas.getContext('2d');
+  let w, h, nodes = [];
+  const NODE_COUNT = 55;
+  const LINK_DIST = 140;
+
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function initNodes(){
+    nodes = [];
+    for(let i=0;i<NODE_COUNT;i++){
+      nodes.push({
+        x: Math.random()*w,
+        y: Math.random()*h,
+        vx: (Math.random()-0.5)*0.25,
+        vy: (Math.random()-0.5)*0.25
+      });
+    }
+  }
+  initNodes();
+
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    for(let i=0;i<nodes.length;i++){
+      const n = nodes[i];
+      if(!reduceMotion){
+        n.x += n.vx; n.y += n.vy;
+        if(n.x < 0 || n.x > w) n.vx *= -1;
+        if(n.y < 0 || n.y > h) n.vy *= -1;
+      }
+    }
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x-b.x, dy = a.y-b.y;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+        if(dist < LINK_DIST){
+          const opac = (1 - dist/LINK_DIST) * 0.35;
+          ctx.strokeStyle = `rgba(156,140,255,${opac})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(a.x,a.y);
+          ctx.lineTo(b.x,b.y);
+          ctx.stroke();
+        }
+      }
+    }
+    for(let i=0;i<nodes.length;i++){
+      ctx.fillStyle = 'rgba(94,234,212,0.55)';
+      ctx.beginPath();
+      ctx.arc(nodes[i].x, nodes[i].y, 1.6, 0, Math.PI*2);
+      ctx.fill();
+    }
+    if(!reduceMotion){ requestAnimationFrame(draw); }
+  }
+  draw();
+</script>
+
+</body>
+</html>
